@@ -60,31 +60,39 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
   }, [volunteerId]);
 
   const fetchVolunteer = async () => {
+    if (!volunteerId) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setError(null);
+      setLoading(true);
       const data = await apiGet(`/api/volunteers/${volunteerId}`);
-      if (!data) {
+      
+      if (!data || typeof data !== 'object') {
         setError('Volunteer not found');
         setTimeout(() => router.push('/volunteers'), 2000);
         return;
       }
+      
       setFormData({
-        name: data.name || '',
-        nickname: data.nickname || '',
-        email: data.email || '',
-        gender: data.gender || '',
-        street: data.street || '',
-        street2: data.street2 || '',
-        city: data.city || '',
-        state: data.state || '',
-        zip: data.zip || '',
-        phones: Array.isArray(data.phones) ? data.phones : [],
-        languages: Array.isArray(data.languages) ? data.languages : [],
-        notes: data.notes || '',
+        name: (data.name && typeof data.name === 'string') ? data.name : '',
+        nickname: (data.nickname && typeof data.nickname === 'string') ? data.nickname : '',
+        email: (data.email && typeof data.email === 'string') ? data.email : '',
+        gender: (data.gender && typeof data.gender === 'string') ? data.gender : '',
+        street: (data.street && typeof data.street === 'string') ? data.street : '',
+        street2: (data.street2 && typeof data.street2 === 'string') ? data.street2 : '',
+        city: (data.city && typeof data.city === 'string') ? data.city : '',
+        state: (data.state && typeof data.state === 'string') ? data.state : '',
+        zip: (data.zip && typeof data.zip === 'string') ? data.zip : '',
+        phones: Array.isArray(data.phones) ? data.phones.filter((p): p is string => typeof p === 'string') : [],
+        languages: Array.isArray(data.languages) ? data.languages.filter((l): l is string => typeof l === 'string') : [],
+        notes: (data.notes && typeof data.notes === 'string') ? data.notes : '',
       });
     } catch (error: any) {
       console.error('Error fetching volunteer:', error);
-      const errorMessage = error.message || 'Failed to load volunteer';
+      const errorMessage = error?.message || error?.toString() || 'Failed to load volunteer';
       setError(errorMessage);
       if (errorMessage.includes('404') || errorMessage.includes('not found')) {
         setTimeout(() => router.push('/volunteers'), 2000);

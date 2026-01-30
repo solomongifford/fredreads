@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { apiGet, apiDelete } from '@/lib/api-client';
 
 interface Class {
@@ -30,6 +31,8 @@ export function ClassesTable() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [pageSize, setPageSize] = useState(20);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchClasses();
@@ -62,18 +65,45 @@ export function ClassesTable() {
     cls.description?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Reset to page 1 when search or page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, pageSize]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredClasses.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedClasses = filteredClasses.slice(startIndex, endIndex);
+  const showPagination = filteredClasses.length > pageSize;
+
   if (loading) {
     return <div className="text-[#333333]">Loading...</div>;
   }
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search classes..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="max-w-sm"
-      />
+      <div className="flex items-center gap-4">
+        <Input
+          placeholder="Search classes..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-[#333333]">Items per page:</span>
+          <Select value={pageSize.toString()} onValueChange={(value) => setPageSize(Number(value))}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
@@ -92,7 +122,7 @@ export function ClassesTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredClasses.map((cls, index) => (
+              paginatedClasses.map((cls, index) => (
                 <TableRow
                   key={cls.id}
                   className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5E1DA]'}
@@ -144,6 +174,60 @@ export function ClassesTable() {
           </TableBody>
         </Table>
       </div>
+      {showPagination && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-[#333333]">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredClasses.length)} of {filteredClasses.length} classes
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="text-[#333333]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={currentPage === pageNum ? "bg-[#333333] text-white hover:bg-[#555555]" : "text-[#333333]"}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="text-[#333333]"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
+import Link from 'next/link';
 
 interface Tag {
   id: string;
@@ -203,7 +204,12 @@ export function TagsTable() {
                   className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5E1DA]'}
                 >
                   <TableCell className="font-medium text-[#333333]">
-                    {tag.name}
+                    <Link 
+                      href={`/tags/${tag.id}`}
+                      className="hover:text-[#8B4513] hover:underline cursor-pointer"
+                    >
+                      {tag.name}
+                    </Link>
                   </TableCell>
                   <TableCell className="text-[#333333]">
                     {tag.usageCount || 0}

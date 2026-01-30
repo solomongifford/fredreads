@@ -3,8 +3,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { StudentForm } from '@/components/students/student-form';
 import { useEffect } from 'react';
 
-export const runtime = 'edge';
-
 export default function EditStudentPage() {
   const params = useParams();
   const router = useRouter();

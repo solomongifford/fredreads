@@ -3,8 +3,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { ActivityLogForm } from '@/components/activity-log/activity-log-form';
 import { useEffect } from 'react';
 
-export const runtime = 'edge';
-
 export default function EditActivityLogPage() {
   const params = useParams();
   const router = useRouter();

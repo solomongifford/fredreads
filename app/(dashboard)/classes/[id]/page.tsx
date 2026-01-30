@@ -3,8 +3,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { ClassForm } from '@/components/classes/class-form';
 import { useEffect } from 'react';
 
-export const runtime = 'edge';
-
 export default function EditClassPage() {
   const params = useParams();
   const router = useRouter();
