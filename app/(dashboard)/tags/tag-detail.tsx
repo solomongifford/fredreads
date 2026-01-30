@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -15,8 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { apiGet } from '@/lib/api-client';
-
-export const runtime = 'edge';
 
 interface Tag {
   id: string;
@@ -50,10 +48,12 @@ interface TagItems {
   volunteers: Volunteer[];
 }
 
-export default function TagDetailPage() {
-  const params = useParams();
+interface TagDetailPageProps {
+  tagId: string;
+}
+
+export default function TagDetailPage({ tagId }: TagDetailPageProps) {
   const router = useRouter();
-  const tagId = params.id as string;
 
   const [tag, setTag] = useState<Tag | null>(null);
   const [items, setItems] = useState<TagItems>({ classes: [], students: [], volunteers: [] });
