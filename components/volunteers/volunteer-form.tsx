@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 
 interface VolunteerFormProps {
@@ -301,8 +302,9 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
         <Button
           type="submit"
           disabled={loading}
-          className="bg-[#8B4513] hover:bg-[#6B3410] text-white"
+          className="bg-[#8B4513] hover:bg-[#6B3410] text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {volunteerId ? 'Update' : 'Create'} Volunteer
         </Button>
       </div>

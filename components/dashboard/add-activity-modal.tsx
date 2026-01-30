@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api-client';
 
 interface Student {
@@ -30,9 +29,9 @@ interface Class {
 }
 
 export function AddActivityModal() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchingLookups, setFetchingLookups] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -53,17 +52,24 @@ export function AddActivityModal() {
   }, [open]);
 
   const fetchLookups = async () => {
+    setFetchingLookups(true);
     try {
       const [studentsData, volunteersData, classesData] = await Promise.all([
-        apiGet<Student[]>('/api/students'),
-        apiGet<Volunteer[]>('/api/volunteers'),
-        apiGet<Class[]>('/api/classes'),
+        apiGet<Student[]>('/api/students').catch(() => [] as Student[]),
+        apiGet<Volunteer[]>('/api/volunteers').catch(() => [] as Volunteer[]),
+        apiGet<Class[]>('/api/classes').catch(() => [] as Class[]),
       ]);
-      setStudents(studentsData);
-      setVolunteers(volunteersData);
-      setClasses(classesData);
+      setStudents(studentsData || []);
+      setVolunteers(volunteersData || []);
+      setClasses(classesData || []);
     } catch (error) {
       console.error('Error fetching lookups:', error);
+      // Set empty arrays on error to prevent crashes
+      setStudents([]);
+      setVolunteers([]);
+      setClasses([]);
+    } finally {
+      setFetchingLookups(false);
     }
   };
 
@@ -142,11 +148,12 @@ export function AddActivityModal() {
             <div>
               <Label htmlFor="studentId" className="text-[#333333]">Student</Label>
               <Select
-                value={formData.studentId}
-                onValueChange={(value) => setFormData({ ...formData, studentId: value })}
+                value={formData.studentId || undefined}
+                onValueChange={(value) => setFormData({ ...formData, studentId: value || '' })}
+                disabled={fetchingLookups}
               >
                 <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder="Select student" />
+                  <SelectValue placeholder={fetchingLookups ? "Loading..." : "Select student"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">None</SelectItem>
@@ -161,11 +168,12 @@ export function AddActivityModal() {
             <div>
               <Label htmlFor="volunteerId" className="text-[#333333]">Volunteer</Label>
               <Select
-                value={formData.volunteerId}
-                onValueChange={(value) => setFormData({ ...formData, volunteerId: value })}
+                value={formData.volunteerId || undefined}
+                onValueChange={(value) => setFormData({ ...formData, volunteerId: value || '' })}
+                disabled={fetchingLookups}
               >
                 <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder="Select volunteer" />
+                  <SelectValue placeholder={fetchingLookups ? "Loading..." : "Select volunteer"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">None</SelectItem>
@@ -180,11 +188,12 @@ export function AddActivityModal() {
             <div>
               <Label htmlFor="classId" className="text-[#333333]">Class</Label>
               <Select
-                value={formData.classId}
-                onValueChange={(value) => setFormData({ ...formData, classId: value })}
+                value={formData.classId || undefined}
+                onValueChange={(value) => setFormData({ ...formData, classId: value || '' })}
+                disabled={fetchingLookups}
               >
                 <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder={fetchingLookups ? "Loading..." : "Select class"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">None</SelectItem>
@@ -232,8 +241,9 @@ export function AddActivityModal() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#8B4513] hover:bg-[#6B3410] text-white"
+              className="bg-[#8B4513] hover:bg-[#6B3410] text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Activity
             </Button>
           </div>

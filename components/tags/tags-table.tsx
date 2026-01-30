@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 
 interface Tag {
@@ -31,6 +31,8 @@ export function TagsTable() {
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
   const [newTagName, setNewTagName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
 
   useEffect(() => {
     fetchTags();
@@ -47,30 +49,40 @@ export function TagsTable() {
     }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!newTagName.trim()) return;
 
+    setIsSubmitting(true);
     try {
       await apiPost('/api/tags', { name: newTagName.trim() });
       setNewTagName('');
       setIsCreating(false);
-      fetchTags();
+      await fetchTags();
     } catch (error) {
       console.error('Error creating tag:', error);
+      alert('Failed to create tag. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleRename = async () => {
+  const handleRename = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!selectedTag || !newTagName.trim()) return;
 
+    setIsRenaming(true);
     try {
       await apiPut(`/api/tags/${selectedTag.id}`, { name: newTagName.trim() });
       setEditDialogOpen(false);
       setSelectedTag(null);
       setNewTagName('');
-      fetchTags();
+      await fetchTags();
     } catch (error) {
       console.error('Error renaming tag:', error);
+      alert('Failed to rename tag. Please try again.');
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -129,36 +141,41 @@ export function TagsTable() {
             <DialogHeader>
               <DialogTitle className="text-[#8B4513]">Create New Tag</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <Label htmlFor="tagName" className="text-[#333333]">Tag Name</Label>
                 <Input
                   id="tagName"
                   value={newTagName}
                   onChange={(e) => setNewTagName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleCreate()}
                   className="mt-1"
+                  required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="flex justify-end gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => {
                     setIsCreating(false);
                     setNewTagName('');
                   }}
                   className="border-[#333333] text-[#333333]"
+                  disabled={isSubmitting}
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleCreate}
-                  className="bg-[#8B4513] hover:bg-[#6B3410] text-white"
+                  type="submit"
+                  disabled={isSubmitting || !newTagName.trim()}
+                  className="bg-[#8B4513] hover:bg-[#6B3410] text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create
                 </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -223,19 +240,21 @@ export function TagsTable() {
           <DialogHeader>
             <DialogTitle className="text-[#8B4513]">Rename Tag</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <form onSubmit={handleRename} className="space-y-4">
             <div>
               <Label htmlFor="editTagName" className="text-[#333333]">Tag Name</Label>
               <Input
                 id="editTagName"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleRename()}
                 className="mt-1"
+                required
+                disabled={isRenaming}
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setEditDialogOpen(false);
@@ -243,17 +262,20 @@ export function TagsTable() {
                   setNewTagName('');
                 }}
                 className="border-[#333333] text-[#333333]"
+                disabled={isRenaming}
               >
                 Cancel
               </Button>
               <Button
-                onClick={handleRename}
-                className="bg-[#8B4513] hover:bg-[#6B3410] text-white"
+                type="submit"
+                disabled={isRenaming || !newTagName.trim()}
+                className="bg-[#8B4513] hover:bg-[#6B3410] text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
+                {isRenaming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 

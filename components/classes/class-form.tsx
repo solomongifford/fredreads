@@ -6,10 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { ScheduleInput } from './schedule-input';
 
 interface ClassFormProps {
   classId?: string;
+}
+
+interface ScheduleData {
+  type: 'recurring' | 'one-time' | null;
+  pattern?: string;
+  time?: string;
+  dates?: Array<{ date: string; time: string }>;
 }
 
 export function ClassForm({ classId }: ClassFormProps) {
@@ -20,7 +29,7 @@ export function ClassForm({ classId }: ClassFormProps) {
     description: '',
     privateNotes: '',
     cost: '',
-    schedule: '',
+    schedule: null as ScheduleData | null,
     street: '',
     street2: '',
     city: '',
@@ -34,6 +43,32 @@ export function ClassForm({ classId }: ClassFormProps) {
     }
   }, [classId]);
 
+  const parseSchedule = (schedule: any): ScheduleData | null => {
+    if (!schedule) return null;
+    
+    // Handle old format or new format
+    if (schedule.type === 'recurring') {
+      return {
+        type: 'recurring',
+        pattern: schedule.pattern || '',
+        time: schedule.time || '',
+      };
+    } else if (schedule.type === 'one-time') {
+      return {
+        type: 'one-time',
+        dates: schedule.dates || [],
+      };
+    } else if (schedule.type === 'ad-hoc') {
+      // Convert ad-hoc to one-time format
+      return {
+        type: 'one-time',
+        dates: schedule.dates || [],
+      };
+    }
+    
+    return null;
+  };
+
   const fetchClass = async () => {
     try {
       const data = await apiGet(`/api/classes/${classId}`);
@@ -42,7 +77,7 @@ export function ClassForm({ classId }: ClassFormProps) {
         description: data.description || '',
         privateNotes: data.privateNotes || '',
         cost: data.cost?.toString() || '',
-        schedule: data.schedule ? JSON.stringify(data.schedule, null, 2) : '',
+        schedule: parseSchedule(data.schedule),
         street: data.street || '',
         street2: data.street2 || '',
         city: data.city || '',
@@ -61,12 +96,29 @@ export function ClassForm({ classId }: ClassFormProps) {
     setLoading(true);
 
     try {
+      // Convert schedule to API format
+      let schedulePayload = null;
+      if (formData.schedule) {
+        if (formData.schedule.type === 'recurring') {
+          schedulePayload = {
+            type: 'recurring',
+            pattern: formData.schedule.pattern || '',
+            time: formData.schedule.time || '',
+          };
+        } else if (formData.schedule.type === 'one-time') {
+          schedulePayload = {
+            type: 'one-time',
+            dates: formData.schedule.dates || [],
+          };
+        }
+      }
+
       const payload = {
         title: formData.title,
         description: formData.description || null,
         privateNotes: formData.privateNotes || null,
         cost: formData.cost ? parseFloat(formData.cost) : null,
-        schedule: formData.schedule ? JSON.parse(formData.schedule) : null,
+        schedule: schedulePayload,
         street: formData.street || null,
         street2: formData.street2 || null,
         city: formData.city || null,
@@ -151,19 +203,13 @@ export function ClassForm({ classId }: ClassFormProps) {
       </div>
 
       <div>
-        <Label htmlFor="schedule" className="text-[#333333]">
-          Schedule (JSON)
-        </Label>
-        <Textarea
-          id="schedule"
-          value={formData.schedule}
-          onChange={(e) =>
-            setFormData({ ...formData, schedule: e.target.value })
-          }
-          rows={6}
-          placeholder='{"type": "recurring", "pattern": "weekly", "dates": []}'
-          className="mt-1 font-mono text-sm"
-        />
+        <Label className="text-[#333333]">Schedule</Label>
+        <div className="mt-1">
+          <ScheduleInput
+            value={formData.schedule}
+            onChange={(schedule) => setFormData({ ...formData, schedule })}
+          />
+        </div>
       </div>
 
       <div className="border-t pt-4">
@@ -234,8 +280,9 @@ export function ClassForm({ classId }: ClassFormProps) {
         <Button
           type="submit"
           disabled={loading}
-          className="bg-[#8B4513] hover:bg-[#6B3410] text-white"
+          className="bg-[#8B4513] hover:bg-[#6B3410] text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {classId ? 'Update' : 'Create'} Class
         </Button>
       </div>
