@@ -86,8 +86,8 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
         city: (data.city && typeof data.city === 'string') ? data.city : '',
         state: (data.state && typeof data.state === 'string') ? data.state : '',
         zip: (data.zip && typeof data.zip === 'string') ? data.zip : '',
-        phones: Array.isArray(data.phones) ? data.phones.filter((p): p is string => typeof p === 'string') : [],
-        languages: Array.isArray(data.languages) ? data.languages.filter((l): l is string => typeof l === 'string') : [],
+        phones: Array.isArray(data.phones) ? data.phones.filter((p: any): p is string => typeof p === 'string') : [],
+        languages: Array.isArray(data.languages) ? data.languages.filter((l: any): l is string => typeof l === 'string') : [],
         notes: (data.notes && typeof data.notes === 'string') ? data.notes : '',
       });
     } catch (error: any) {
