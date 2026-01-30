@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <script>
+    // SPA routing fallback for Cloudflare Pages
+    (function() {
+      const pathname = window.location.pathname;
+      const pathParts = pathname.split('/').filter(Boolean);
+      
+      // Check if this looks like a detail page (e.g., /classes/123)
+      if (pathParts.length === 2) {
+        const [section, id] = pathParts;
+        const validSections = ['classes', 'students', 'volunteers', 'activity-log', 'tags'];
+        
+        if (validSections.includes(section) && id !== 'new') {
+          // Redirect to the section page, preserving the full path
+          window.location.replace('/' + section + window.location.search + window.location.hash);
+        }
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif;">
+    <div style="text-align: center;">
+      <h1 style="font-size: 2rem; color: #8B4513; margin-bottom: 1rem;">Loading...</h1>
+      <p style="color: #333;">If you are not redirected, <a href="/" style="color: #8B4513;">go back home</a>.</p>
+    </div>
+  </div>
+</body>
+</html>
