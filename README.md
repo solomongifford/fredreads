@@ -35,8 +35,8 @@ The build configuration is set in `wrangler.toml` and matches Cloudflare's expec
    - Go to Settings → Builds & deployments
    - Click "Connect to Git"
    - Select your repository
-   - Configure build settings:
-     - **Build command**: `npx @cloudflare/next-on-pages@1`
+     - Configure build settings:
+     - **Build command**: `npx @cloudflare/next-on-pages@1 && cp public/_redirects .vercel/output/static/_redirects`
      - **Build output directory**: `.vercel/output/static`
      - **Root directory**: `/` (repo root is now frontend/)
    - **IMPORTANT**: Go to Settings → Compatibility Flags
