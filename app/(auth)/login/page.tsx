@@ -2,12 +2,14 @@
 
 import { login } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { checkAuthCallback } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // Check if we're returning from OAuth callback (this sets the token in localStorage)
@@ -27,7 +29,9 @@ export default function LoginPage() {
   }, [router]);
 
   const handleLogin = () => {
+    setIsLoading(true);
     login();
+    // Note: The page will redirect or reload after OAuth, so we don't need to set loading to false
   };
 
   return (
@@ -41,9 +45,17 @@ export default function LoginPage() {
         </p>
         <Button
           onClick={handleLogin}
-          className="w-full bg-[#8B4513] hover:bg-[#6B3410] text-white"
+          disabled={isLoading}
+          className="w-full bg-[#8B4513] hover:bg-[#6B3410] text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sign in with Google
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Redirecting to Google...
+            </>
+          ) : (
+            'Sign in with Google'
+          )}
         </Button>
       </div>
     </div>
