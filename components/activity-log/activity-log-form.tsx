@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 
 interface ActivityLogFormProps {
   logId?: string;
@@ -32,8 +33,7 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
 
   const fetchLog = async () => {
     try {
-      const response = await fetch(`/api/activity-log/${logId}`);
-      const data = await response.json();
+      const data = await apiGet(`/api/activity-log/${logId}`);
       setFormData({
         date: new Date(data.date).toISOString().split('T')[0],
         studentId: data.studentId || '',
@@ -65,19 +65,12 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
         notes: formData.notes || null,
       };
 
-      const url = logId ? `/api/activity-log/${logId}` : '/api/activity-log';
-      const method = logId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        router.push('/activity-log');
-        router.refresh();
+      if (logId) {
+        await apiPut(`/api/activity-log/${logId}`, payload);
+      } else {
+        await apiPost('/api/activity-log', payload);
       }
+      router.push('/activity-log');
     } catch (error) {
       console.error('Error saving activity log:', error);
     } finally {

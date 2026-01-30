@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2 } from 'lucide-react';
+import { apiGet, apiDelete } from '@/lib/api-client';
 
 interface Volunteer {
   id: string;
@@ -33,8 +34,7 @@ export function VolunteersTable() {
 
   const fetchVolunteers = async () => {
     try {
-      const response = await fetch('/api/volunteers');
-      const data = await response.json();
+      const data = await apiGet<Volunteer[]>('/api/volunteers');
       setVolunteers(data);
     } catch (error) {
       console.error('Error fetching volunteers:', error);
@@ -47,7 +47,7 @@ export function VolunteersTable() {
     if (!confirm('Are you sure you want to delete this volunteer?')) return;
     
     try {
-      await fetch(`/api/volunteers/${id}`, { method: 'DELETE' });
+      await apiDelete(`/api/volunteers/${id}`);
       fetchVolunteers();
     } catch (error) {
       console.error('Error deleting volunteer:', error);

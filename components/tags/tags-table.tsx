@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 
 interface Tag {
   id: string;
@@ -37,8 +38,7 @@ export function TagsTable() {
 
   const fetchTags = async () => {
     try {
-      const response = await fetch('/api/tags');
-      const data = await response.json();
+      const data = await apiGet<Tag[]>('/api/tags');
       setTags(data);
     } catch (error) {
       console.error('Error fetching tags:', error);
@@ -51,17 +51,10 @@ export function TagsTable() {
     if (!newTagName.trim()) return;
 
     try {
-      const response = await fetch('/api/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newTagName.trim() }),
-      });
-
-      if (response.ok) {
-        setNewTagName('');
-        setIsCreating(false);
-        fetchTags();
-      }
+      await apiPost('/api/tags', { name: newTagName.trim() });
+      setNewTagName('');
+      setIsCreating(false);
+      fetchTags();
     } catch (error) {
       console.error('Error creating tag:', error);
     }
@@ -71,18 +64,11 @@ export function TagsTable() {
     if (!selectedTag || !newTagName.trim()) return;
 
     try {
-      const response = await fetch(`/api/tags/${selectedTag.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newTagName.trim() }),
-      });
-
-      if (response.ok) {
-        setEditDialogOpen(false);
-        setSelectedTag(null);
-        setNewTagName('');
-        fetchTags();
-      }
+      await apiPut(`/api/tags/${selectedTag.id}`, { name: newTagName.trim() });
+      setEditDialogOpen(false);
+      setSelectedTag(null);
+      setNewTagName('');
+      fetchTags();
     } catch (error) {
       console.error('Error renaming tag:', error);
     }
@@ -92,22 +78,15 @@ export function TagsTable() {
     if (!selectedTag) return;
 
     try {
-      const response = await fetch(`/api/tags/${selectedTag.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setDeleteDialogOpen(false);
-        setSelectedTag(null);
-        fetchTags();
-      } else {
-        const data = await response.json();
-        if (data.usageCount) {
-          alert(`Cannot delete tag. It is used by ${data.usageCount} item(s).`);
-        }
-      }
-    } catch (error) {
+      await apiDelete(`/api/tags/${selectedTag.id}`);
+      setDeleteDialogOpen(false);
+      setSelectedTag(null);
+      fetchTags();
+    } catch (error: any) {
       console.error('Error deleting tag:', error);
+      if (error.message?.includes('usageCount') || error.message?.includes('used')) {
+        alert(`Cannot delete tag. It is used by item(s).`);
+      }
     }
   };
 

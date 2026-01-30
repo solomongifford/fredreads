@@ -35,8 +35,7 @@ export function StudentForm({ studentId }: StudentFormProps) {
 
   const fetchStudent = async () => {
     try {
-      const response = await fetch(`/api/students/${studentId}`);
-      const data = await response.json();
+      const data = await apiGet(`/api/students/${studentId}`);
       setFormData({
         name: data.name || '',
         email: data.email || '',
@@ -102,19 +101,12 @@ export function StudentForm({ studentId }: StudentFormProps) {
         needsClassId: formData.needsClassId || null,
       };
 
-      const url = studentId ? `/api/students/${studentId}` : '/api/students';
-      const method = studentId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        router.push('/students');
-        router.refresh();
+      if (studentId) {
+        await apiPut(`/api/students/${studentId}`, payload);
+      } else {
+        await apiPost('/api/students', payload);
       }
+      router.push('/students');
     } catch (error) {
       console.error('Error saving student:', error);
     } finally {

@@ -38,8 +38,7 @@ export function ActivityLogTable() {
 
   const fetchLogs = async () => {
     try {
-      const response = await fetch('/api/activity-log');
-      const data = await response.json();
+      const data = await apiGet<ActivityLogEntry[]>('/api/activity-log');
       setLogs(data);
     } catch (error) {
       console.error('Error fetching activity log:', error);
@@ -52,7 +51,7 @@ export function ActivityLogTable() {
     if (!confirm('Are you sure you want to delete this activity log entry?')) return;
     
     try {
-      await fetch(`/api/activity-log/${id}`, { method: 'DELETE' });
+      await apiDelete(`/api/activity-log/${id}`);
       fetchLogs();
     } catch (error) {
       console.error('Error deleting activity log:', error);

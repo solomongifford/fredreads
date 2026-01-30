@@ -93,7 +93,7 @@ export function AddActivityModal() {
         amountReceived: '',
         notes: '',
       });
-      router.refresh();
+      // Tables will refresh when user navigates to the activity log page
     } catch (error) {
       console.error('Error creating activity log:', error);
     } finally {

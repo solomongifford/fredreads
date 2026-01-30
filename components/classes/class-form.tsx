@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 
 interface ClassFormProps {
   classId?: string;
@@ -30,8 +31,7 @@ export function ClassForm({ classId }: ClassFormProps) {
 
   const fetchClass = async () => {
     try {
-      const response = await fetch(`/api/classes/${classId}`);
-      const data = await response.json();
+      const data = await apiGet(`/api/classes/${classId}`);
       setFormData({
         title: data.title || '',
         description: data.description || '',
@@ -59,19 +59,12 @@ export function ClassForm({ classId }: ClassFormProps) {
         schedule: formData.schedule ? JSON.parse(formData.schedule) : null,
       };
 
-      const url = classId ? `/api/classes/${classId}` : '/api/classes';
-      const method = classId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        router.push('/classes');
-        router.refresh();
+      if (classId) {
+        await apiPut(`/api/classes/${classId}`, payload);
+      } else {
+        await apiPost('/api/classes', payload);
       }
+      router.push('/classes');
     } catch (error) {
       console.error('Error saving class:', error);
     } finally {

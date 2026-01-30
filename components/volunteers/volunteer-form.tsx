@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 
 interface VolunteerFormProps {
   volunteerId?: string;
@@ -33,8 +34,7 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
 
   const fetchVolunteer = async () => {
     try {
-      const response = await fetch(`/api/volunteers/${volunteerId}`);
-      const data = await response.json();
+      const data = await apiGet(`/api/volunteers/${volunteerId}`);
       setFormData({
         name: data.name || '',
         email: data.email || '',
@@ -98,19 +98,12 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
         notes: formData.notes || null,
       };
 
-      const url = volunteerId ? `/api/volunteers/${volunteerId}` : '/api/volunteers';
-      const method = volunteerId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        router.push('/volunteers');
-        router.refresh();
+      if (volunteerId) {
+        await apiPut(`/api/volunteers/${volunteerId}`, payload);
+      } else {
+        await apiPost('/api/volunteers', payload);
       }
+      router.push('/volunteers');
     } catch (error) {
       console.error('Error saving volunteer:', error);
     } finally {

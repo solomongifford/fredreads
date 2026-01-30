@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2 } from 'lucide-react';
+import { apiGet, apiDelete } from '@/lib/api-client';
 
 interface Student {
   id: string;
@@ -33,8 +34,7 @@ export function StudentsTable() {
 
   const fetchStudents = async () => {
     try {
-      const response = await fetch('/api/students');
-      const data = await response.json();
+      const data = await apiGet<Student[]>('/api/students');
       setStudents(data);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -47,7 +47,7 @@ export function StudentsTable() {
     if (!confirm('Are you sure you want to delete this student?')) return;
     
     try {
-      await fetch(`/api/students/${id}`, { method: 'DELETE' });
+      await apiDelete(`/api/students/${id}`);
       fetchStudents();
     } catch (error) {
       console.error('Error deleting student:', error);

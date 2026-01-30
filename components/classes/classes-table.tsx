@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2 } from 'lucide-react';
+import { apiGet, apiDelete } from '@/lib/api-client';
 
 interface Class {
   id: string;
@@ -34,8 +35,7 @@ export function ClassesTable() {
 
   const fetchClasses = async () => {
     try {
-      const response = await fetch('/api/classes');
-      const data = await response.json();
+      const data = await apiGet<Class[]>('/api/classes');
       setClasses(data);
     } catch (error) {
       console.error('Error fetching classes:', error);
@@ -48,7 +48,7 @@ export function ClassesTable() {
     if (!confirm('Are you sure you want to delete this class?')) return;
     
     try {
-      await fetch(`/api/classes/${id}`, { method: 'DELETE' });
+      await apiDelete(`/api/classes/${id}`);
       fetchClasses();
     } catch (error) {
       console.error('Error deleting class:', error);
