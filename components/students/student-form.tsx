@@ -182,13 +182,13 @@ export function StudentForm({ studentId }: StudentFormProps) {
         </Label>
         <Select
           value={formData.gender || undefined}
-          onValueChange={(value) => setFormData({ ...formData, gender: value || '' })}
+          onValueChange={(value) => setFormData({ ...formData, gender: value === '__none__' ? '' : value || '' })}
         >
           <SelectTrigger className="mt-1 w-full">
             <SelectValue placeholder="Select gender" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None</SelectItem>
+            <SelectItem value="__none__">None</SelectItem>
             <SelectItem value="M">Male</SelectItem>
             <SelectItem value="F">Female</SelectItem>
           </SelectContent>

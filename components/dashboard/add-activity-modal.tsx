@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,9 +80,9 @@ export function AddActivityModal() {
     try {
       const payload = {
         date: formData.date,
-        studentId: formData.studentId || null,
-        volunteerId: formData.volunteerId || null,
-        classId: formData.classId || null,
+        studentId: formData.studentId && formData.studentId !== '__none__' ? formData.studentId : null,
+        volunteerId: formData.volunteerId && formData.volunteerId !== '__none__' ? formData.volunteerId : null,
+        classId: formData.classId && formData.classId !== '__none__' ? formData.classId : null,
         durationMinutes: formData.durationMinutes ? parseInt(formData.durationMinutes) : null,
         amountReceived: formData.amountReceived ? parseFloat(formData.amountReceived) : null,
         notes: formData.notes || null,
@@ -118,6 +118,9 @@ export function AddActivityModal() {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-[#8B4513]">Add Activity</DialogTitle>
+          <DialogDescription>
+            Create a new activity log entry for a student, volunteer, or class.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -148,15 +151,15 @@ export function AddActivityModal() {
             <div>
               <Label htmlFor="studentId" className="text-[#333333]">Student</Label>
               <Select
-                value={formData.studentId || undefined}
-                onValueChange={(value) => setFormData({ ...formData, studentId: value || '' })}
+                value={formData.studentId ? formData.studentId : '__none__'}
+                onValueChange={(value) => setFormData({ ...formData, studentId: value === '__none__' ? '' : value })}
                 disabled={fetchingLookups}
               >
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue placeholder={fetchingLookups ? "Loading..." : "Select student"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {students.map((student) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name} {student.email ? `(${student.email})` : ''}
@@ -168,15 +171,15 @@ export function AddActivityModal() {
             <div>
               <Label htmlFor="volunteerId" className="text-[#333333]">Volunteer</Label>
               <Select
-                value={formData.volunteerId || undefined}
-                onValueChange={(value) => setFormData({ ...formData, volunteerId: value || '' })}
+                value={formData.volunteerId ? formData.volunteerId : '__none__'}
+                onValueChange={(value) => setFormData({ ...formData, volunteerId: value === '__none__' ? '' : value })}
                 disabled={fetchingLookups}
               >
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue placeholder={fetchingLookups ? "Loading..." : "Select volunteer"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {volunteers.map((volunteer) => (
                     <SelectItem key={volunteer.id} value={volunteer.id}>
                       {volunteer.name} ({volunteer.email})
@@ -188,15 +191,15 @@ export function AddActivityModal() {
             <div>
               <Label htmlFor="classId" className="text-[#333333]">Class</Label>
               <Select
-                value={formData.classId || undefined}
-                onValueChange={(value) => setFormData({ ...formData, classId: value || '' })}
+                value={formData.classId ? formData.classId : '__none__'}
+                onValueChange={(value) => setFormData({ ...formData, classId: value === '__none__' ? '' : value })}
                 disabled={fetchingLookups}
               >
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue placeholder={fetchingLookups ? "Loading..." : "Select class"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="__none__">None</SelectItem>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.title}

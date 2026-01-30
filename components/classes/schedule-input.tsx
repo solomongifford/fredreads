@@ -10,7 +10,7 @@ interface ScheduleData {
   type: 'recurring' | 'one-time' | null;
   pattern?: string; // For recurring: e.g., "Monday", "Tuesday,Thursday"
   time?: string; // Time in HH:mm format
-  dates?: Array<{ date: string; time: string }>; // For one-time: specific dates with times
+  dates?: Array<{ date: string; time: string; duration?: number }>; // For one-time: specific dates with times and duration (in minutes)
 }
 
 interface ScheduleInputProps {
@@ -59,11 +59,11 @@ export function ScheduleInput({ value, onChange }: ScheduleInputProps) {
     onChange({
       ...schedule,
       type: 'one-time',
-      dates: [...dates, { date: '', time: '' }],
+      dates: [...dates, { date: '', time: '', duration: undefined }],
     } as ScheduleData);
   };
 
-  const updateOneTimeDate = (index: number, field: 'date' | 'time', newValue: string) => {
+  const updateOneTimeDate = (index: number, field: 'date' | 'time' | 'duration', newValue: string | number) => {
     const dates = [...(schedule.dates || [])];
     dates[index] = { ...dates[index], [field]: newValue };
     onChange({
@@ -178,34 +178,48 @@ export function ScheduleInput({ value, onChange }: ScheduleInputProps) {
             </Button>
           </div>
           {(schedule.dates || []).map((dateItem, index) => (
-            <div key={index} className="flex gap-2 items-end">
-              <div className="flex-1">
-                <Label className="text-[#333333] text-sm">Date</Label>
-                <Input
-                  type="date"
-                  value={dateItem.date}
-                  onChange={(e) => updateOneTimeDate(index, 'date', e.target.value)}
-                  className="mt-1"
-                />
+            <div key={index} className="space-y-2">
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Label className="text-[#333333] text-sm">Date</Label>
+                  <Input
+                    type="date"
+                    value={dateItem.date}
+                    onChange={(e) => updateOneTimeDate(index, 'date', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-[#333333] text-sm">Time</Label>
+                  <Input
+                    type="time"
+                    value={dateItem.time}
+                    onChange={(e) => updateOneTimeDate(index, 'time', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-[#333333] text-sm">Duration (minutes)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={dateItem.duration || ''}
+                    onChange={(e) => updateOneTimeDate(index, 'duration', e.target.value ? parseInt(e.target.value) : undefined)}
+                    className="mt-1"
+                    placeholder="60"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeOneTimeDate(index)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
-              <div className="flex-1">
-                <Label className="text-[#333333] text-sm">Time</Label>
-                <Input
-                  type="time"
-                  value={dateItem.time}
-                  onChange={(e) => updateOneTimeDate(index, 'time', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeOneTimeDate(index)}
-                className="text-red-600 hover:text-red-700"
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </div>
           ))}
           {(!schedule.dates || schedule.dates.length === 0) && (
