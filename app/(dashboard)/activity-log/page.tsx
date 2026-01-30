@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react';
 import { ActivityLogTable } from '@/components/activity-log/activity-log-table';
 import { ActivityLogForm } from '@/components/activity-log/activity-log-form';
 
-export const runtime = 'edge';
-
 export default function ActivityLogPage() {
   const [id, setId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

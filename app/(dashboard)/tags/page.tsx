@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react';
 import { TagsTable } from '@/components/tags/tags-table';
 import TagDetailPage from './tag-detail';
 
-export const runtime = 'edge';
-
 export default function TagsPage() {
   const [tagId, setTagId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

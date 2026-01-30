@@ -6,8 +6,6 @@ import { Plus } from 'lucide-react';
 import { StudentsTable } from '@/components/students/students-table';
 import { StudentForm } from '@/components/students/student-form';
 
-export const runtime = 'edge';
-
 export default function StudentsPage() {
   const [id, setId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

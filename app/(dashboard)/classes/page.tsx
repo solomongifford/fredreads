@@ -6,8 +6,6 @@ import { Plus } from 'lucide-react';
 import { ClassesTable } from '@/components/classes/classes-table';
 import { ClassForm } from '@/components/classes/class-form';
 
-export const runtime = 'edge';
-
 export default function ClassesPage() {
   const [id, setId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);

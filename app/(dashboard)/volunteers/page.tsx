@@ -6,8 +6,6 @@ import { Plus } from 'lucide-react';
 import { VolunteersTable } from '@/components/volunteers/volunteers-table';
 import { VolunteerForm } from '@/components/volunteers/volunteer-form';
 
-export const runtime = 'edge';
-
 export default function VolunteersPage() {
   const [id, setId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
