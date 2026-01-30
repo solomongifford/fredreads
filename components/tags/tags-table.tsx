@@ -97,9 +97,7 @@ export function TagsTable() {
       fetchTags();
     } catch (error: any) {
       console.error('Error deleting tag:', error);
-      if (error.message?.includes('usageCount') || error.message?.includes('used')) {
-        alert(`Cannot delete tag. It is used by item(s).`);
-      }
+      alert('Failed to delete tag. Please try again.');
     }
   };
 
@@ -294,8 +292,8 @@ export function TagsTable() {
             <p className="text-[#333333]">
               Are you sure you want to delete the tag &quot;{selectedTag?.name}&quot;?
               {selectedTag?.usageCount && selectedTag.usageCount > 0 && (
-                <span className="block mt-2 text-red-600">
-                  This tag is used by {selectedTag.usageCount} item(s) and cannot be deleted.
+                <span className="block mt-2 text-amber-600">
+                  This tag is used by {selectedTag.usageCount} item(s). Deleting it will remove all tag associations.
                 </span>
               )}
             </p>
@@ -312,7 +310,6 @@ export function TagsTable() {
               </Button>
               <Button
                 onClick={handleDelete}
-                disabled={!!(selectedTag?.usageCount && selectedTag.usageCount > 0)}
                 variant="outline"
                 className="border-red-600 text-red-600 hover:bg-red-50"
               >
