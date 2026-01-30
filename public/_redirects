@@ -1,0 +1,6 @@
+# SPA routing for detail pages
+/classes/* /classes 200
+/students/* /students 200
+/volunteers/* /volunteers 200
+/activity-log/* /activity-log 200
+/tags/* /tags 200

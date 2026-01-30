@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-export const runtime = 'edge';
 import {
   Table,
   TableBody,
@@ -17,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { apiGet } from '@/lib/api-client';
+
+export const runtime = 'edge';
 
 interface Tag {
   id: string;
@@ -76,6 +76,7 @@ export default function TagDetailPage() {
   }, [tagId]);
 
   const fetchTagAndItems = async () => {
+    setLoading(true);
     try {
       const [tagData, itemsData] = await Promise.all([
         apiGet<Tag>(`/api/tags/${tagId}`),
