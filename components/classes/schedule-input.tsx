@@ -63,9 +63,13 @@ export function ScheduleInput({ value, onChange }: ScheduleInputProps) {
     } as ScheduleData);
   };
 
-  const updateOneTimeDate = (index: number, field: 'date' | 'time' | 'duration', newValue: string | number) => {
+  const updateOneTimeDate = (index: number, field: 'date' | 'time' | 'duration', newValue: string | number | undefined) => {
     const dates = [...(schedule.dates || [])];
-    dates[index] = { ...dates[index], [field]: newValue };
+    if (field === 'duration') {
+      dates[index] = { ...dates[index], duration: newValue as number | undefined };
+    } else {
+      dates[index] = { ...dates[index], [field]: newValue };
+    }
     onChange({
       ...schedule,
       type: 'one-time',
