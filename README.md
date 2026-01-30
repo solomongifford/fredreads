@@ -36,7 +36,7 @@ The build configuration is set in `wrangler.toml` and matches Cloudflare's expec
    - Click "Connect to Git"
    - Select your repository
      - Configure build settings:
-     - **Build command**: `npx @cloudflare/next-on-pages@1 && cp public/_redirects .vercel/output/static/_redirects`
+     - **Build command**: `npx @cloudflare/next-on-pages@1`
      - **Build output directory**: `.vercel/output/static`
      - **Root directory**: `/` (repo root is now frontend/)
    - **IMPORTANT**: Go to Settings → Compatibility Flags
@@ -48,7 +48,7 @@ The build configuration is set in `wrangler.toml` and matches Cloudflare's expec
 
 **Note**: The repository root is now `frontend/`, so the root directory in Cloudflare should be `/`.
 
-**Important**: This frontend is 100% static HTML with no server-side code. All authentication and API logic runs in the Workers backend.
+**Important**: This frontend uses Cloudflare Pages Functions for SPA routing (see `/functions/_middleware.ts`). All authentication and API logic runs in the Workers backend.
 
 ## Environment Variables
 

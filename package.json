@@ -6,8 +6,7 @@
     "dev": "next dev -p 3100",
     "dev:cloudflare": "wrangler pages dev .next --port 3100 --compatibility-date=2024-01-01 --local",
     "dev:with-db": "wrangler dev --port 3100 --local --compatibility-date=2024-01-01",
-    "build": "next build && npm run copy-redirects",
-    "copy-redirects": "cp public/_redirects .vercel/output/static/_redirects || true",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
