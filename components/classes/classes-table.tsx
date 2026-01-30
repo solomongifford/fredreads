@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -25,13 +26,14 @@ interface Class {
 }
 
 export function ClassesTable() {
+  const pathname = usePathname();
   const [classes, setClasses] = useState<Class[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchClasses();
-  }, []);
+  }, [pathname]);
 
   const fetchClasses = async () => {
     try {
@@ -99,7 +101,18 @@ export function ClassesTable() {
                     {cls.title}
                   </TableCell>
                   <TableCell className="text-[#333333]">
-                    {cls.description || '-'}
+                    {cls.description ? (
+                      <span 
+                        title={cls.description}
+                        className="block truncate max-w-[200px]"
+                      >
+                        {cls.description.length > 20 
+                          ? `${cls.description.substring(0, 20)}...` 
+                          : cls.description}
+                      </span>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell className="text-[#333333]">
                     {cls.cost ? `$${cls.cost.toFixed(2)}` : '-'}

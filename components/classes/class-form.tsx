@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { ScheduleInput } from './schedule-input';
+import { TagSelector } from '@/components/tags/tag-selector';
 
 interface ClassFormProps {
   classId?: string;
@@ -18,12 +19,16 @@ interface ScheduleData {
   type: 'recurring' | 'one-time' | null;
   pattern?: string;
   time?: string;
-  dates?: Array<{ date: string; time: string }>;
+  duration?: number;
+  dates?: Array<{ date: string; time: string; duration?: number }>;
 }
 
 export function ClassForm({ classId }: ClassFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(!!classId);
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -52,6 +57,7 @@ export function ClassForm({ classId }: ClassFormProps) {
         type: 'recurring',
         pattern: schedule.pattern || '',
         time: schedule.time || '',
+        duration: schedule.duration,
       };
     } else if (schedule.type === 'one-time') {
       return {
@@ -71,7 +77,13 @@ export function ClassForm({ classId }: ClassFormProps) {
 
   const fetchClass = async () => {
     try {
+      setError(null);
       const data = await apiGet(`/api/classes/${classId}`);
+      if (!data) {
+        setError('Class not found');
+        setTimeout(() => router.push('/classes'), 2000);
+        return;
+      }
       setFormData({
         title: data.title || '',
         description: data.description || '',
@@ -84,8 +96,13 @@ export function ClassForm({ classId }: ClassFormProps) {
         state: data.state || '',
         zip: data.zip || '',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching class:', error);
+      const errorMessage = error.message || 'Failed to load class';
+      setError(errorMessage);
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        setTimeout(() => router.push('/classes'), 2000);
+      }
     } finally {
       setLoading(false);
     }
@@ -104,6 +121,7 @@ export function ClassForm({ classId }: ClassFormProps) {
             type: 'recurring',
             pattern: formData.schedule.pattern || '',
             time: formData.schedule.time || '',
+            duration: formData.schedule.duration,
           };
         } else if (formData.schedule.type === 'one-time') {
           schedulePayload = {
@@ -126,12 +144,41 @@ export function ClassForm({ classId }: ClassFormProps) {
         zip: formData.zip || null,
       };
 
+      let savedId = classId;
       if (classId) {
         await apiPut(`/api/classes/${classId}`, payload);
+        savedId = classId;
       } else {
-        await apiPost('/api/classes', payload);
+        const result = await apiPost<{ id: string }>('/api/classes', payload);
+        savedId = result.id;
       }
-      router.push('/classes');
+      
+      // Save tags if we have pending tags (for new classes)
+      if (pendingTagIds.length > 0 && savedId) {
+        try {
+          for (const tagId of pendingTagIds) {
+            await apiPost('/api/taggable-items', {
+              tagId,
+              taggableType: 'class',
+              taggableId: savedId,
+            });
+          }
+        } catch (error) {
+          console.error('Error saving tags:', error);
+        }
+      }
+      
+      if (!classId) {
+        // Show success message for new classes
+        setShowSuccess(true);
+        setTimeout(() => {
+          router.push('/classes');
+          router.refresh();
+        }, 3000);
+      } else {
+        router.push('/classes');
+        router.refresh();
+      }
     } catch (error) {
       console.error('Error saving class:', error);
     } finally {
@@ -141,6 +188,26 @@ export function ClassForm({ classId }: ClassFormProps) {
 
   if (loading && classId) {
     return <div className="text-[#333333]">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-600">
+        <p>{error}</p>
+        <p className="text-sm mt-2">Redirecting to classes list...</p>
+      </div>
+    );
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="max-w-2xl">
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md">
+          <p className="font-semibold">Class has been added successfully!</p>
+          <p className="text-sm mt-1">It may take a few minutes to be available in the list.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -186,30 +253,6 @@ export function ClassForm({ classId }: ClassFormProps) {
           rows={4}
           className="mt-1"
         />
-      </div>
-
-      <div>
-        <Label htmlFor="cost" className="text-[#333333]">
-          Cost
-        </Label>
-        <Input
-          id="cost"
-          type="number"
-          step="0.01"
-          value={formData.cost}
-          onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-          className="mt-1"
-        />
-      </div>
-
-      <div>
-        <Label className="text-[#333333]">Schedule</Label>
-        <div className="mt-1">
-          <ScheduleInput
-            value={formData.schedule}
-            onChange={(schedule) => setFormData({ ...formData, schedule })}
-          />
-        </div>
       </div>
 
       <div className="border-t pt-4">
@@ -266,6 +309,39 @@ export function ClassForm({ classId }: ClassFormProps) {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold text-[#8B4513] mb-4">Schedule</h3>
+        <div className="mt-1">
+          <ScheduleInput
+            value={formData.schedule}
+            onChange={(schedule) => setFormData({ ...formData, schedule })}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="cost" className="text-[#333333]">
+          Cost
+        </Label>
+        <Input
+          id="cost"
+          type="number"
+          step="0.01"
+          value={formData.cost}
+          onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+          className="mt-1"
+        />
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold text-[#8B4513] mb-4">Tags</h3>
+        <TagSelector
+          taggableType="class"
+          taggableId={classId}
+          onTagsChange={setPendingTagIds}
+        />
       </div>
 
       <div className="flex gap-2">

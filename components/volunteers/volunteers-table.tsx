@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -24,13 +25,14 @@ interface Volunteer {
 }
 
 export function VolunteersTable() {
+  const pathname = usePathname();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchVolunteers();
-  }, []);
+  }, [pathname]);
 
   const fetchVolunteers = async () => {
     try {
@@ -101,7 +103,18 @@ export function VolunteersTable() {
                     {volunteer.email}
                   </TableCell>
                   <TableCell className="text-[#333333]">
-                    {volunteer.notes || '-'}
+                    {volunteer.notes ? (
+                      <span 
+                        title={volunteer.notes}
+                        className="block truncate max-w-[200px]"
+                      >
+                        {volunteer.notes.length > 20 
+                          ? `${volunteer.notes.substring(0, 20)}...` 
+                          : volunteer.notes}
+                      </span>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

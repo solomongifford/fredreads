@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { TagSelector } from '@/components/tags/tag-selector';
 
 interface ActivityLogFormProps {
   logId?: string;
@@ -16,6 +17,8 @@ interface ActivityLogFormProps {
 export function ActivityLogForm({ logId }: ActivityLogFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(!!logId);
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     studentId: '',
@@ -66,12 +69,41 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
         notes: formData.notes || null,
       };
 
+      let savedId = logId;
       if (logId) {
         await apiPut(`/api/activity-log/${logId}`, payload);
+        savedId = logId;
       } else {
-        await apiPost('/api/activity-log', payload);
+        const result = await apiPost<{ id: string }>('/api/activity-log', payload);
+        savedId = result.id;
       }
-      router.push('/activity-log');
+      
+      // Save tags if we have pending tags (for new activity logs)
+      if (pendingTagIds.length > 0 && savedId) {
+        try {
+          for (const tagId of pendingTagIds) {
+            await apiPost('/api/taggable-items', {
+              tagId,
+              taggableType: 'activity_log',
+              taggableId: savedId,
+            });
+          }
+        } catch (error) {
+          console.error('Error saving tags:', error);
+        }
+      }
+      
+      if (!logId) {
+        // Show success message for new activity logs
+        setShowSuccess(true);
+        setTimeout(() => {
+          router.push('/activity-log');
+          router.refresh();
+        }, 3000);
+      } else {
+        router.push('/activity-log');
+        router.refresh();
+      }
     } catch (error) {
       console.error('Error saving activity log:', error);
     } finally {
@@ -81,6 +113,17 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
 
   if (loading && logId) {
     return <div className="text-[#333333]">Loading...</div>;
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="max-w-2xl">
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md">
+          <p className="font-semibold">Activity log entry has been added successfully!</p>
+          <p className="text-sm mt-1">It may take a few minutes to be available in the list.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -176,6 +219,15 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           rows={4}
           className="mt-1"
+        />
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold text-[#8B4513] mb-4">Tags</h3>
+        <TagSelector
+          taggableType="activity_log"
+          taggableId={logId}
+          onTagsChange={setPendingTagIds}
         />
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -29,13 +30,14 @@ interface ActivityLogEntry {
 }
 
 export function ActivityLogTable() {
+  const pathname = usePathname();
   const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [pathname]);
 
   const fetchLogs = async () => {
     try {

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Loader2 } from 'lucide-react';
 import { apiGet, apiPost } from '@/lib/api-client';
+import { TagSelector } from '@/components/tags/tag-selector';
 
 interface Student {
   id: string;
@@ -32,9 +33,11 @@ export function AddActivityModal() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingLookups, setFetchingLookups] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     studentId: '',
@@ -88,8 +91,26 @@ export function AddActivityModal() {
         notes: formData.notes || null,
       };
 
-      await apiPost('/api/activity-log', payload);
-      setOpen(false);
+      const result = await apiPost<{ id: string }>('/api/activity-log', payload);
+      const savedId = result.id;
+      
+      // Save tags if we have pending tags
+      if (pendingTagIds.length > 0 && savedId) {
+        try {
+          for (const tagId of pendingTagIds) {
+            await apiPost('/api/taggable-items', {
+              tagId,
+              taggableType: 'activity_log',
+              taggableId: savedId,
+            });
+          }
+        } catch (error) {
+          console.error('Error saving tags:', error);
+        }
+      }
+      
+      setShowSuccess(true);
+      setPendingTagIds([]);
       setFormData({
         date: new Date().toISOString().split('T')[0],
         studentId: '',
@@ -99,6 +120,11 @@ export function AddActivityModal() {
         amountReceived: '',
         notes: '',
       });
+      // Close modal after showing success message
+      setTimeout(() => {
+        setShowSuccess(false);
+        setOpen(false);
+      }, 3000);
       // Tables will refresh when user navigates to the activity log page
     } catch (error) {
       console.error('Error creating activity log:', error);
@@ -122,7 +148,13 @@ export function AddActivityModal() {
             Create a new activity log entry for a student, volunteer, or class.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {showSuccess ? (
+          <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md">
+            <p className="font-semibold">Activity log entry has been added successfully!</p>
+            <p className="text-sm mt-1">It may take a few minutes to be available in the list.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="date" className="text-[#333333]">Date *</Label>
@@ -232,6 +264,14 @@ export function AddActivityModal() {
               className="mt-1"
             />
           </div>
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold text-[#8B4513] mb-4">Tags</h3>
+            <TagSelector
+              taggableType="activity_log"
+              taggableId={undefined}
+              onTagsChange={setPendingTagIds}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <Button
               type="button"
@@ -251,6 +291,7 @@ export function AddActivityModal() {
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

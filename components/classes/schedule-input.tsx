@@ -10,6 +10,7 @@ interface ScheduleData {
   type: 'recurring' | 'one-time' | null;
   pattern?: string; // For recurring: e.g., "Monday", "Tuesday,Thursday"
   time?: string; // Time in HH:mm format
+  duration?: number; // For recurring: duration in minutes
   dates?: Array<{ date: string; time: string; duration?: number }>; // For one-time: specific dates with times and duration (in minutes)
 }
 
@@ -29,6 +30,7 @@ export function ScheduleInput({ value, onChange }: ScheduleInputProps) {
         type: 'recurring',
         pattern: schedule.pattern || '',
         time: schedule.time || '',
+        duration: schedule.duration,
       });
     } else {
       onChange({
@@ -51,6 +53,14 @@ export function ScheduleInput({ value, onChange }: ScheduleInputProps) {
       ...schedule,
       type: 'recurring',
       time,
+    } as ScheduleData);
+  };
+
+  const handleRecurringDurationChange = (duration: number | undefined) => {
+    onChange({
+      ...schedule,
+      type: 'recurring',
+      duration,
     } as ScheduleData);
   };
 
@@ -162,6 +172,21 @@ export function ScheduleInput({ value, onChange }: ScheduleInputProps) {
               value={schedule.time || ''}
               onChange={(e) => handleRecurringTimeChange(e.target.value)}
               className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="recurring-duration" className="text-[#333333]">
+              Duration (minutes)
+            </Label>
+            <Input
+              id="recurring-duration"
+              type="number"
+              min="0"
+              step="1"
+              value={schedule.duration || ''}
+              onChange={(e) => handleRecurringDurationChange(e.target.value ? parseInt(e.target.value) : undefined)}
+              className="mt-1"
+              placeholder="60"
             />
           </div>
         </div>

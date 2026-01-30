@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
+import { TagSelector } from '@/components/tags/tag-selector';
 
 interface StudentFormProps {
   studentId?: string;
@@ -17,6 +18,8 @@ interface StudentFormProps {
 export function StudentForm({ studentId }: StudentFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(!!studentId);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     nickname: '',
@@ -34,16 +37,54 @@ export function StudentForm({ studentId }: StudentFormProps) {
   });
   const [phoneInput, setPhoneInput] = useState('');
   const [languageInput, setLanguageInput] = useState('');
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [classes, setClasses] = useState<Array<{ id: string; title: string }>>([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+
+  const validatePhone = (phone: string): boolean => {
+    // Remove all non-digit characters except + for validation
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    // Check if it's a valid US phone number (10 digits) or international (+ followed by digits)
+    if (phone.startsWith('+')) {
+      // International format: + followed by 7-15 digits
+      return /^\+[1-9]\d{6,14}$/.test(phone.replace(/\s/g, ''));
+    } else {
+      // US format: exactly 10 digits
+      return digitsOnly.length === 10;
+    }
+  };
 
   useEffect(() => {
     if (studentId) {
       fetchStudent();
     }
+    fetchClasses();
   }, [studentId]);
+
+  const fetchClasses = async () => {
+    setLoadingClasses(true);
+    try {
+      const data = await apiGet<Array<{ id: string; title: string }>>('/api/classes');
+      setClasses(data || []);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      setClasses([]);
+    } finally {
+      setLoadingClasses(false);
+    }
+  };
 
   const fetchStudent = async () => {
     try {
+      setError(null);
       const data = await apiGet(`/api/students/${studentId}`);
+      if (!data) {
+        setError('Student not found');
+        setTimeout(() => router.push('/students'), 2000);
+        return;
+      }
       setFormData({
         name: data.name || '',
         nickname: data.nickname || '',
@@ -54,26 +95,41 @@ export function StudentForm({ studentId }: StudentFormProps) {
         city: data.city || '',
         state: data.state || '',
         zip: data.zip || '',
-        phones: data.phones || [],
-        languages: data.languages || [],
+        phones: Array.isArray(data.phones) ? data.phones : [],
+        languages: Array.isArray(data.languages) ? data.languages : [],
         description: data.description || '',
         needsClassId: data.needsClassId || '',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching student:', error);
+      const errorMessage = error.message || 'Failed to load student';
+      setError(errorMessage);
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        setTimeout(() => router.push('/students'), 2000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const addPhone = () => {
-    if (phoneInput.trim()) {
-      setFormData({
-        ...formData,
-        phones: [...formData.phones, phoneInput.trim()],
-      });
-      setPhoneInput('');
+    const trimmedPhone = phoneInput.trim();
+    if (!trimmedPhone) {
+      setPhoneError('Phone number is required');
+      return;
     }
+    
+    if (!validatePhone(trimmedPhone)) {
+      setPhoneError('Please enter a valid phone number (e.g., (123) 456-7890, 123-456-7890, or +1 123 456 7890)');
+      return;
+    }
+    
+    setPhoneError(null);
+    setFormData({
+      ...formData,
+      phones: [...formData.phones, trimmedPhone],
+    });
+    setPhoneInput('');
   };
 
   const removePhone = (index: number) => {
@@ -119,12 +175,41 @@ export function StudentForm({ studentId }: StudentFormProps) {
         needsClassId: formData.needsClassId || null,
       };
 
+      let savedId = studentId;
       if (studentId) {
         await apiPut(`/api/students/${studentId}`, payload);
+        savedId = studentId;
       } else {
-        await apiPost('/api/students', payload);
+        const result = await apiPost<{ id: string }>('/api/students', payload);
+        savedId = result.id;
       }
-      router.push('/students');
+      
+      // Save tags if we have pending tags (for new students)
+      if (pendingTagIds.length > 0 && savedId) {
+        try {
+          for (const tagId of pendingTagIds) {
+            await apiPost('/api/taggable-items', {
+              tagId,
+              taggableType: 'student',
+              taggableId: savedId,
+            });
+          }
+        } catch (error) {
+          console.error('Error saving tags:', error);
+        }
+      }
+      
+      if (!studentId) {
+        // Show success message for new students
+        setShowSuccess(true);
+        setTimeout(() => {
+          router.push('/students');
+          router.refresh();
+        }, 3000);
+      } else {
+        router.push('/students');
+        router.refresh();
+      }
     } catch (error) {
       console.error('Error saving student:', error);
     } finally {
@@ -134,6 +219,26 @@ export function StudentForm({ studentId }: StudentFormProps) {
 
   if (loading && studentId) {
     return <div className="text-[#333333]">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-600">
+        <p>{error}</p>
+        <p className="text-sm mt-2">Redirecting to students list...</p>
+      </div>
+    );
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="max-w-2xl">
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md">
+          <p className="font-semibold">Student has been added successfully!</p>
+          <p className="text-sm mt-1">It may take a few minutes to be available in the list.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -195,6 +300,79 @@ export function StudentForm({ studentId }: StudentFormProps) {
         </Select>
       </div>
 
+      <div>
+        <Label className="text-[#333333]">Phones</Label>
+        <div className="flex gap-2 mt-1">
+          <Input
+            value={phoneInput}
+            onChange={(e) => {
+              setPhoneInput(e.target.value);
+              if (phoneError) setPhoneError(null);
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPhone())}
+            placeholder="Add phone number (e.g., (123) 456-7890)"
+            className={phoneError ? 'border-red-500' : ''}
+          />
+          <Button type="button" onClick={addPhone} variant="outline">
+            Add
+          </Button>
+        </div>
+        {phoneError && (
+          <p className="text-sm text-red-600 mt-1">{phoneError}</p>
+        )}
+        {formData.phones.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {formData.phones.map((phone, index) => (
+              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <span className="text-sm text-[#333333]">{phone}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removePhone(index)}
+                  className="text-red-600"
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Label className="text-[#333333]">Languages</Label>
+        <div className="flex gap-2 mt-1">
+          <Input
+            value={languageInput}
+            onChange={(e) => setLanguageInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLanguage())}
+            placeholder="Add language"
+          />
+          <Button type="button" onClick={addLanguage} variant="outline">
+            Add
+          </Button>
+        </div>
+        {formData.languages.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {formData.languages.map((lang, index) => (
+              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                <span className="text-sm text-[#333333]">{lang}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeLanguage(index)}
+                  className="text-red-600"
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-[#8B4513]">Address</h3>
         <div>
@@ -250,72 +428,6 @@ export function StudentForm({ studentId }: StudentFormProps) {
       </div>
 
       <div>
-        <Label className="text-[#333333]">Phones</Label>
-        <div className="flex gap-2 mt-1">
-          <Input
-            value={phoneInput}
-            onChange={(e) => setPhoneInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPhone())}
-            placeholder="Add phone number"
-          />
-          <Button type="button" onClick={addPhone} variant="outline">
-            Add
-          </Button>
-        </div>
-        {formData.phones.length > 0 && (
-          <div className="mt-2 space-y-1">
-            {formData.phones.map((phone, index) => (
-              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <span className="text-sm text-[#333333]">{phone}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removePhone(index)}
-                  className="text-red-600"
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <Label className="text-[#333333]">Languages</Label>
-        <div className="flex gap-2 mt-1">
-          <Input
-            value={languageInput}
-            onChange={(e) => setLanguageInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addLanguage())}
-            placeholder="Add language"
-          />
-          <Button type="button" onClick={addLanguage} variant="outline">
-            Add
-          </Button>
-        </div>
-        {formData.languages.length > 0 && (
-          <div className="mt-2 space-y-1">
-            {formData.languages.map((lang, index) => (
-              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                <span className="text-sm text-[#333333]">{lang}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeLanguage(index)}
-                  className="text-red-600"
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div>
         <Label htmlFor="description" className="text-[#333333]">
           Description
         </Label>
@@ -332,15 +444,35 @@ export function StudentForm({ studentId }: StudentFormProps) {
 
       <div>
         <Label htmlFor="needsClassId" className="text-[#333333]">
-          Needs Class ID
+          Needs Class
         </Label>
-        <Input
-          id="needsClassId"
-          value={formData.needsClassId}
-          onChange={(e) =>
-            setFormData({ ...formData, needsClassId: e.target.value })
+        <Select
+          value={formData.needsClassId || '__none__'}
+          onValueChange={(value) =>
+            setFormData({ ...formData, needsClassId: value === '__none__' ? '' : value })
           }
-          className="mt-1"
+          disabled={loadingClasses}
+        >
+          <SelectTrigger className="mt-1 w-full">
+            <SelectValue placeholder={loadingClasses ? "Loading classes..." : "Select a class"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">None</SelectItem>
+            {classes.map((cls) => (
+              <SelectItem key={cls.id} value={cls.id}>
+                {cls.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold text-[#8B4513] mb-4">Tags</h3>
+        <TagSelector
+          taggableType="student"
+          taggableId={studentId}
+          onTagsChange={setPendingTagIds}
         />
       </div>
 

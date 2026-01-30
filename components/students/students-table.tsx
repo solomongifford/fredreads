@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Table,
@@ -24,13 +25,14 @@ interface Student {
 }
 
 export function StudentsTable() {
+  const pathname = usePathname();
   const [students, setStudents] = useState<Student[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [pathname]);
 
   const fetchStudents = async () => {
     try {
@@ -101,7 +103,18 @@ export function StudentsTable() {
                     {student.email || '-'}
                   </TableCell>
                   <TableCell className="text-[#333333]">
-                    {student.description || '-'}
+                    {student.description ? (
+                      <span 
+                        title={student.description}
+                        className="block truncate max-w-[200px]"
+                      >
+                        {student.description.length > 20 
+                          ? `${student.description.substring(0, 20)}...` 
+                          : student.description}
+                      </span>
+                    ) : (
+                      '-'
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
