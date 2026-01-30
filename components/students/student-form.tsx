@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 
@@ -18,7 +19,9 @@ export function StudentForm({ studentId }: StudentFormProps) {
   const [loading, setLoading] = useState(!!studentId);
   const [formData, setFormData] = useState({
     name: '',
+    nickname: '',
     email: '',
+    gender: '',
     street: '',
     street2: '',
     city: '',
@@ -43,7 +46,9 @@ export function StudentForm({ studentId }: StudentFormProps) {
       const data = await apiGet(`/api/students/${studentId}`);
       setFormData({
         name: data.name || '',
+        nickname: data.nickname || '',
         email: data.email || '',
+        gender: data.gender || '',
         street: data.street || '',
         street2: data.street2 || '',
         city: data.city || '',
@@ -147,6 +152,18 @@ export function StudentForm({ studentId }: StudentFormProps) {
       </div>
 
       <div>
+        <Label htmlFor="nickname" className="text-[#333333]">
+          Nickname
+        </Label>
+        <Input
+          id="nickname"
+          value={formData.nickname}
+          onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+          className="mt-1"
+        />
+      </div>
+
+      <div>
         <Label htmlFor="email" className="text-[#333333]">
           Email
         </Label>
@@ -157,6 +174,25 @@ export function StudentForm({ studentId }: StudentFormProps) {
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="mt-1"
         />
+      </div>
+
+      <div>
+        <Label htmlFor="gender" className="text-[#333333]">
+          Gender
+        </Label>
+        <Select
+          value={formData.gender || undefined}
+          onValueChange={(value) => setFormData({ ...formData, gender: value || '' })}
+        >
+          <SelectTrigger className="mt-1 w-full">
+            <SelectValue placeholder="Select gender" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">None</SelectItem>
+            <SelectItem value="M">Male</SelectItem>
+            <SelectItem value="F">Female</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-4">
