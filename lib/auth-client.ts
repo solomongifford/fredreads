@@ -1,7 +1,8 @@
 // Client-side authentication for static frontend
 // All auth logic is handled by the Workers backend
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+import { API_BASE_URL } from './api-config';
+
 const TOKEN_KEY = 'auth_token';
 
 export function getAuthToken(): string | null {

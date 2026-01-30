@@ -6,7 +6,7 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:8787' // Local Workers dev server
-    : 'https://fredreads-api.your-subdomain.workers.dev'); // Production Workers URL
+    : 'https://fredreads-api.solomongifford.workers.dev'); // Production Workers URL
 
 // Helper function to get full API URL
 export function getApiUrl(path: string): string {
