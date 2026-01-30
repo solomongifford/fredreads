@@ -2,7 +2,7 @@
 // In production, this should point to your Cloudflare Workers API
 // In development, you can use the local Workers dev server
 
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   // Always use localhost in development
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     return 'http://localhost:8787';
@@ -13,6 +13,7 @@ function getApiBaseUrl(): string {
   return 'https://fredreads-api.solomongifford.workers.dev';
 }
 
+// Export as constant for backward compatibility, but it's a function call
 export const API_BASE_URL = getApiBaseUrl();
 
 // Helper function to get full API URL

@@ -1,7 +1,7 @@
 // Client-side authentication for static frontend
 // All auth logic is handled by the Workers backend
 
-import { API_BASE_URL } from './api-config';
+import { getApiBaseUrl } from './api-config';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -28,7 +28,8 @@ export async function getCurrentUser(): Promise<{ email: string } | null> {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -53,14 +54,16 @@ export async function getCurrentUser(): Promise<{ email: string } | null> {
 export function login(): void {
   // Redirect to backend OAuth endpoint
   const redirectUri = typeof window !== 'undefined' ? window.location.origin : '';
-  window.location.href = `${API_BASE_URL}/api/auth/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const apiBaseUrl = getApiBaseUrl();
+  window.location.href = `${apiBaseUrl}/api/auth/login?redirect_uri=${encodeURIComponent(redirectUri)}`;
 }
 
 export async function logout(): Promise<void> {
   const token = getAuthToken();
   if (token) {
     try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+      const apiBaseUrl = getApiBaseUrl();
+      await fetch(`${apiBaseUrl}/api/auth/logout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

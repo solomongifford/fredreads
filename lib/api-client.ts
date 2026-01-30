@@ -1,7 +1,7 @@
 // API client for making authenticated requests to Workers backend
 
 import { getAuthToken } from './auth-client';
-import { API_BASE_URL } from './api-config';
+import { getApiBaseUrl } from './api-config';
 
 export async function apiRequest(
   path: string,
@@ -31,7 +31,9 @@ export async function apiRequest(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = path.startsWith('http') ? path : `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+  // Get API base URL at runtime to ensure it's always correct
+  const apiBaseUrl = getApiBaseUrl();
+  const url = path.startsWith('http') ? path : `${apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 
   return fetch(url, {
     ...options,
