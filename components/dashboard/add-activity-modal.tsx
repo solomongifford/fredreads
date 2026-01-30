@@ -1,18 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { apiGet, apiPost } from '@/lib/api-client';
+
+interface Student {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+interface Volunteer {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Class {
+  id: string;
+  title: string;
+  description: string | null;
+}
 
 export function AddActivityModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     studentId: '',
@@ -22,6 +45,27 @@ export function AddActivityModal() {
     amountReceived: '',
     notes: '',
   });
+
+  useEffect(() => {
+    if (open) {
+      fetchLookups();
+    }
+  }, [open]);
+
+  const fetchLookups = async () => {
+    try {
+      const [studentsData, volunteersData, classesData] = await Promise.all([
+        apiGet<Student[]>('/api/students'),
+        apiGet<Volunteer[]>('/api/volunteers'),
+        apiGet<Class[]>('/api/classes'),
+      ]);
+      setStudents(studentsData);
+      setVolunteers(volunteersData);
+      setClasses(classesData);
+    } catch (error) {
+      console.error('Error fetching lookups:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,25 +82,18 @@ export function AddActivityModal() {
         notes: formData.notes || null,
       };
 
-      const response = await fetch('/api/activity-log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      await apiPost('/api/activity-log', payload);
+      setOpen(false);
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        studentId: '',
+        volunteerId: '',
+        classId: '',
+        durationMinutes: '',
+        amountReceived: '',
+        notes: '',
       });
-
-      if (response.ok) {
-        setOpen(false);
-        setFormData({
-          date: new Date().toISOString().split('T')[0],
-          studentId: '',
-          volunteerId: '',
-          classId: '',
-          durationMinutes: '',
-          amountReceived: '',
-          notes: '',
-        });
-        router.refresh();
-      }
+      router.refresh();
     } catch (error) {
       console.error('Error creating activity log:', error);
     } finally {
@@ -103,31 +140,61 @@ export function AddActivityModal() {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="studentId" className="text-[#333333]">Student ID</Label>
-              <Input
-                id="studentId"
+              <Label htmlFor="studentId" className="text-[#333333]">Student</Label>
+              <Select
                 value={formData.studentId}
-                onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                className="mt-1"
-              />
+                onValueChange={(value) => setFormData({ ...formData, studentId: value })}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue placeholder="Select student" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {students.map((student) => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.name} {student.email ? `(${student.email})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label htmlFor="volunteerId" className="text-[#333333]">Volunteer ID</Label>
-              <Input
-                id="volunteerId"
+              <Label htmlFor="volunteerId" className="text-[#333333]">Volunteer</Label>
+              <Select
                 value={formData.volunteerId}
-                onChange={(e) => setFormData({ ...formData, volunteerId: e.target.value })}
-                className="mt-1"
-              />
+                onValueChange={(value) => setFormData({ ...formData, volunteerId: value })}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue placeholder="Select volunteer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {volunteers.map((volunteer) => (
+                    <SelectItem key={volunteer.id} value={volunteer.id}>
+                      {volunteer.name} ({volunteer.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label htmlFor="classId" className="text-[#333333]">Class ID</Label>
-              <Input
-                id="classId"
+              <Label htmlFor="classId" className="text-[#333333]">Class</Label>
+              <Select
                 value={formData.classId}
-                onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                className="mt-1"
-              />
+                onValueChange={(value) => setFormData({ ...formData, classId: value })}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue placeholder="Select class" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>
@@ -140,6 +207,7 @@ export function AddActivityModal() {
               value={formData.amountReceived}
               onChange={(e) => setFormData({ ...formData, amountReceived: e.target.value })}
               className="mt-1"
+              placeholder="0.00"
             />
           </div>
           <div>

@@ -42,7 +42,8 @@ export async function apiRequest(
 export async function apiGet<T = any>(path: string): Promise<T> {
   const response = await apiRequest(path, { method: 'GET' });
   if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(errorData.error || `API error: ${response.statusText}`);
   }
   return response.json();
 }
@@ -53,7 +54,8 @@ export async function apiPost<T = any>(path: string, data?: any): Promise<T> {
     body: data ? JSON.stringify(data) : undefined,
   });
   if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(errorData.error || `API error: ${response.statusText}`);
   }
   return response.json();
 }
@@ -72,7 +74,8 @@ export async function apiPut<T = any>(path: string, data?: any): Promise<T> {
 export async function apiDelete<T = any>(path: string): Promise<T> {
   const response = await apiRequest(path, { method: 'DELETE' });
   if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(errorData.error || `API error: ${response.statusText}`);
   }
   return response.json();
 }

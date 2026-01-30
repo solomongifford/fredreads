@@ -18,11 +18,16 @@ export default function DashboardLayout({
 
   useEffect(() => {
     async function checkAuth() {
+      // Give a small delay to ensure token is set if coming from OAuth callback
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const currentUser = await getCurrentUser();
       if (!currentUser) {
+        console.log('No current user, redirecting to login');
         router.push('/login');
         return;
       }
+      console.log('User authenticated:', currentUser);
       setUser(currentUser);
       setLoading(false);
     }

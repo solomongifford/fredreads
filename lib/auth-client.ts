@@ -22,7 +22,10 @@ export function removeAuthToken(): void {
 
 export async function getCurrentUser(): Promise<{ email: string } | null> {
   const token = getAuthToken();
-  if (!token) return null;
+  if (!token) {
+    console.log('No auth token found');
+    return null;
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
@@ -32,11 +35,15 @@ export async function getCurrentUser(): Promise<{ email: string } | null> {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Auth check failed:', response.status, errorText);
       removeAuthToken();
       return null;
     }
 
-    return await response.json();
+    const user = await response.json();
+    console.log('Auth check successful:', user);
+    return user;
   } catch (error) {
     console.error('Error getting current user:', error);
     return null;

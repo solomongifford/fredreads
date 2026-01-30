@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Trash2, Plus } from 'lucide-react';
+import { apiGet, apiPost, apiDelete } from '@/lib/api-client';
 
 interface Admin {
   id: string;
@@ -37,12 +38,9 @@ export function AdminsTable() {
 
   const fetchAdmins = async () => {
     try {
-      const response = await fetch('/api/admins');
-      if (!response.ok) {
-        throw new Error('Failed to fetch admins');
-      }
-      const data = await response.json();
+      const data = await apiGet<Admin[]>('/api/admins');
       setAdmins(data);
+      setError('');
     } catch (error) {
       console.error('Error fetching admins:', error);
       setError('Failed to load admins');
@@ -58,24 +56,14 @@ export function AdminsTable() {
     }
 
     try {
-      const response = await fetch('/api/admins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: newAdminEmail.trim() }),
-      });
-
-      if (response.ok) {
-        setNewAdminEmail('');
-        setCreateDialogOpen(false);
-        setError('');
-        fetchAdmins();
-      } else {
-        const data = await response.json();
-        setError(data.error || 'Failed to create admin');
-      }
-    } catch (error) {
+      await apiPost('/api/admins', { email: newAdminEmail.trim() });
+      setNewAdminEmail('');
+      setCreateDialogOpen(false);
+      setError('');
+      fetchAdmins();
+    } catch (error: any) {
       console.error('Error creating admin:', error);
-      setError('Failed to create admin');
+      setError(error.message || 'Failed to create admin');
     }
   };
 
@@ -83,21 +71,13 @@ export function AdminsTable() {
     if (!selectedAdmin) return;
 
     try {
-      const response = await fetch(`/api/admins/${selectedAdmin.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setDeleteDialogOpen(false);
-        setSelectedAdmin(null);
-        fetchAdmins();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to delete admin');
-      }
-    } catch (error) {
+      await apiDelete(`/api/admins/${selectedAdmin.id}`);
+      setDeleteDialogOpen(false);
+      setSelectedAdmin(null);
+      fetchAdmins();
+    } catch (error: any) {
       console.error('Error deleting admin:', error);
-      alert('Failed to delete admin');
+      alert(error.message || 'Failed to delete admin');
     }
   };
 
