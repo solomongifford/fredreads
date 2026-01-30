@@ -39,6 +39,8 @@ The build configuration is set in `wrangler.toml` and matches Cloudflare's expec
      - **Build command**: `npx @cloudflare/next-on-pages@1`
      - **Build output directory**: `.vercel/output/static`
      - **Root directory**: `/` (repo root is now frontend/)
+   - **IMPORTANT**: Go to Settings → Compatibility Flags
+     - Add `nodejs_compat` flag to both Production and Preview environments
    - Add environment variables:
      - `NEXT_PUBLIC_API_URL` - Your Workers API URL
 
