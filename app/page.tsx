@@ -2,12 +2,22 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuthToken } from '@/lib/auth-client';
+import { getAuthToken, checkAuthCallback } from '@/lib/auth-client';
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
+    // Check if we're returning from OAuth callback (this sets the token in localStorage)
+    const hasToken = checkAuthCallback();
+    
+    if (hasToken) {
+      // Token was just set from URL, redirect immediately
+      router.push('/classes');
+      return;
+    }
+    
+    // Check for existing token
     const token = getAuthToken();
     if (token) {
       router.push('/classes');

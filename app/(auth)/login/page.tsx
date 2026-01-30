@@ -10,10 +10,16 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if we're returning from OAuth callback
-    checkAuthCallback();
+    // Check if we're returning from OAuth callback (this sets the token in localStorage)
+    const hasToken = checkAuthCallback();
     
-    // If we have a token, redirect to dashboard
+    if (hasToken) {
+      // Token was just set from URL, redirect immediately
+      router.push('/classes');
+      return;
+    }
+    
+    // If we already have a token, redirect to dashboard
     const token = localStorage.getItem('auth_token');
     if (token) {
       router.push('/classes');

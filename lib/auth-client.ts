@@ -68,8 +68,8 @@ export async function logout(): Promise<void> {
 }
 
 // Check if we have a token in URL (from OAuth callback)
-export function checkAuthCallback(): void {
-  if (typeof window === 'undefined') return;
+export function checkAuthCallback(): boolean {
+  if (typeof window === 'undefined') return false;
 
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
@@ -79,5 +79,7 @@ export function checkAuthCallback(): void {
     // Remove token from URL
     const newUrl = window.location.pathname;
     window.history.replaceState({}, '', newUrl);
+    return true; // Token was found and set
   }
+  return false; // No token in URL
 }
