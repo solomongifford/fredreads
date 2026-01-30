@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting...</title>
+  <title>Loading...</title>
   <script>
     // SPA routing fallback for Cloudflare Pages
+    // Fetch and display the section page content without changing the URL
     (function() {
       const pathname = window.location.pathname;
       const pathParts = pathname.split('/').filter(Boolean);
@@ -16,10 +17,28 @@
         const validSections = ['classes', 'students', 'volunteers', 'activity-log', 'tags'];
         
         if (validSections.includes(section) && id !== 'new') {
-          // Redirect to the section page, preserving the full path
-          window.location.replace('/' + section + window.location.search + window.location.hash);
+          // Fetch the section page HTML and replace current page content
+          fetch('/' + section)
+            .then(response => response.text())
+            .then(html => {
+              // Replace the entire document with the fetched HTML
+              document.open();
+              document.write(html);
+              document.close();
+              
+              // Update the history state to mark this as loaded
+              history.replaceState({ loaded: true }, '', pathname);
+            })
+            .catch(error => {
+              console.error('Error loading page:', error);
+              document.body.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif;"><div style="text-align: center;"><h1 style="font-size: 2rem; color: #8B4513; margin-bottom: 1rem;">Error Loading Page</h1><p style="color: #333;"><a href="/" style="color: #8B4513;">Go back home</a></p></div></div>';
+            });
+          return;
         }
       }
+      
+      // For other 404s, show the error page
+      document.body.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif;"><div style="text-align: center;"><h1 style="font-size: 2rem; color: #8B4513; margin-bottom: 1rem;">404 - Page Not Found</h1><p style="color: #333;"><a href="/" style="color: #8B4513;">Go back home</a></p></div></div>';
     })();
   </script>
 </head>
@@ -27,7 +46,6 @@
   <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, -apple-system, sans-serif;">
     <div style="text-align: center;">
       <h1 style="font-size: 2rem; color: #8B4513; margin-bottom: 1rem;">Loading...</h1>
-      <p style="color: #333;">If you are not redirected, <a href="/" style="color: #8B4513;">go back home</a>.</p>
     </div>
   </div>
 </body>
