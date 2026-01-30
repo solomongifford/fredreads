@@ -18,7 +18,11 @@ export function StudentForm({ studentId }: StudentFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    address: '',
+    street: '',
+    street2: '',
+    city: '',
+    state: '',
+    zip: '',
     phones: [] as string[],
     languages: [] as string[],
     description: '',
@@ -39,7 +43,11 @@ export function StudentForm({ studentId }: StudentFormProps) {
       setFormData({
         name: data.name || '',
         email: data.email || '',
-        address: data.address || '',
+        street: data.street || '',
+        street2: data.street2 || '',
+        city: data.city || '',
+        state: data.state || '',
+        zip: data.zip || '',
         phones: data.phones || [],
         languages: data.languages || [],
         description: data.description || '',
@@ -94,7 +102,11 @@ export function StudentForm({ studentId }: StudentFormProps) {
       const payload = {
         name: formData.name,
         email: formData.email || null,
-        address: formData.address || null,
+        street: formData.street || null,
+        street2: formData.street2 || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        zip: formData.zip || null,
         phones: formData.phones,
         languages: formData.languages,
         description: formData.description || null,
@@ -146,17 +158,58 @@ export function StudentForm({ studentId }: StudentFormProps) {
         />
       </div>
 
-      <div>
-        <Label htmlFor="address" className="text-[#333333]">
-          Address
-        </Label>
-        <Textarea
-          id="address"
-          value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          rows={2}
-          className="mt-1"
-        />
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-[#8B4513]">Address</h3>
+        <div>
+          <Label htmlFor="street" className="text-[#333333]">Street</Label>
+          <Input
+            id="street"
+            value={formData.street}
+            onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="street2" className="text-[#333333]">Street 2</Label>
+          <Input
+            id="street2"
+            value={formData.street2}
+            onChange={(e) => setFormData({ ...formData, street2: e.target.value })}
+            className="mt-1"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="city" className="text-[#333333]">City</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="state" className="text-[#333333]">State</Label>
+            <Input
+              id="state"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              className="mt-1"
+              maxLength={2}
+              placeholder="VA"
+            />
+          </div>
+          <div>
+            <Label htmlFor="zip" className="text-[#333333]">Zip</Label>
+            <Input
+              id="zip"
+              value={formData.zip}
+              onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+              className="mt-1"
+              maxLength={10}
+            />
+          </div>
+        </div>
       </div>
 
       <div>

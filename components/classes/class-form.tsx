@@ -21,6 +21,11 @@ export function ClassForm({ classId }: ClassFormProps) {
     privateNotes: '',
     cost: '',
     schedule: '',
+    street: '',
+    street2: '',
+    city: '',
+    state: '',
+    zip: '',
   });
 
   useEffect(() => {
@@ -38,6 +43,11 @@ export function ClassForm({ classId }: ClassFormProps) {
         privateNotes: data.privateNotes || '',
         cost: data.cost?.toString() || '',
         schedule: data.schedule ? JSON.stringify(data.schedule, null, 2) : '',
+        street: data.street || '',
+        street2: data.street2 || '',
+        city: data.city || '',
+        state: data.state || '',
+        zip: data.zip || '',
       });
     } catch (error) {
       console.error('Error fetching class:', error);
@@ -57,6 +67,11 @@ export function ClassForm({ classId }: ClassFormProps) {
         privateNotes: formData.privateNotes || null,
         cost: formData.cost ? parseFloat(formData.cost) : null,
         schedule: formData.schedule ? JSON.parse(formData.schedule) : null,
+        street: formData.street || null,
+        street2: formData.street2 || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        zip: formData.zip || null,
       };
 
       if (classId) {
@@ -149,6 +164,62 @@ export function ClassForm({ classId }: ClassFormProps) {
           placeholder='{"type": "recurring", "pattern": "weekly", "dates": []}'
           className="mt-1 font-mono text-sm"
         />
+      </div>
+
+      <div className="border-t pt-4">
+        <h3 className="text-lg font-semibold text-[#8B4513] mb-4">Location</h3>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="street" className="text-[#333333]">Street</Label>
+            <Input
+              id="street"
+              value={formData.street}
+              onChange={(e) => setFormData({ ...formData, street: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="street2" className="text-[#333333]">Street 2</Label>
+            <Input
+              id="street2"
+              value={formData.street2}
+              onChange={(e) => setFormData({ ...formData, street2: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="city" className="text-[#333333]">City</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="state" className="text-[#333333]">State</Label>
+              <Input
+                id="state"
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                className="mt-1"
+                maxLength={2}
+                placeholder="VA"
+              />
+            </div>
+            <div>
+              <Label htmlFor="zip" className="text-[#333333]">Zip</Label>
+              <Input
+                id="zip"
+                value={formData.zip}
+                onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
+                className="mt-1"
+                maxLength={10}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-2">
