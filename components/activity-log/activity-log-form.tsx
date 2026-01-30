@@ -38,6 +38,10 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
   const fetchLog = async () => {
     try {
       const data = await apiGet(`/api/activity-log/${logId}`);
+      if (!data) {
+        setTimeout(() => router.push('/activity-log'), 2000);
+        return;
+      }
       setFormData({
         date: new Date(data.date).toISOString().split('T')[0],
         studentId: data.studentId || '',
@@ -47,8 +51,12 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
         amountReceived: data.amountReceived?.toString() || '',
         notes: data.notes || '',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching activity log:', error);
+      const errorMessage = error?.message || 'Failed to load activity log';
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        setTimeout(() => router.push('/activity-log'), 2000);
+      }
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { VolunteerForm } from '@/components/volunteers/volunteer-form';
 import { useEffect } from 'react';
 
+export const runtime = 'edge';
+
 export default function EditVolunteerPage() {
   const params = useParams();
   const router = useRouter();
