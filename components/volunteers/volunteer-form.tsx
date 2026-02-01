@@ -176,8 +176,8 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
         savedId = result.id;
       }
       
-      // Save tags if we have pending tags (for new volunteers)
-      if (pendingTagIds.length > 0 && savedId) {
+      // Save tags if we have pending tags (for new volunteers only)
+      if (!volunteerId && pendingTagIds.length > 0 && savedId) {
         try {
           for (const tagId of pendingTagIds) {
             await apiPost('/api/taggable-items', {

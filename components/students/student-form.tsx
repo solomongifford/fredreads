@@ -187,8 +187,8 @@ export function StudentForm({ studentId }: StudentFormProps) {
         savedId = result.id;
       }
       
-      // Save tags if we have pending tags (for new students)
-      if (pendingTagIds.length > 0 && savedId) {
+      // Save tags if we have pending tags (for new students only)
+      if (!studentId && pendingTagIds.length > 0 && savedId) {
         try {
           for (const tagId of pendingTagIds) {
             await apiPost('/api/taggable-items', {
