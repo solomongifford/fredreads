@@ -164,7 +164,9 @@ export function StudentForm({ studentId }: StudentFormProps) {
     try {
       const payload = {
         name: formData.name,
+        nickname: formData.nickname || null,
         email: formData.email || null,
+        gender: formData.gender || null,
         street: formData.street || null,
         street2: formData.street2 || null,
         city: formData.city || null,

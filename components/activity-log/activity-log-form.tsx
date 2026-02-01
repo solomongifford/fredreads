@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, ChevronRight } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { TagSelector } from '@/components/tags/tag-selector';
@@ -20,6 +21,9 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
   const [loading, setLoading] = useState(!!logId);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [students, setStudents] = useState<any[]>([]);
+  const [volunteers, setVolunteers] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     studentId: '',
@@ -31,10 +35,26 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
   });
 
   useEffect(() => {
+    fetchReferenceData();
     if (logId) {
       fetchLog();
     }
   }, [logId]);
+
+  const fetchReferenceData = async () => {
+    try {
+      const [studentsData, volunteersData, classesData] = await Promise.all([
+        apiGet<any[]>('/api/students'),
+        apiGet<any[]>('/api/volunteers'),
+        apiGet<any[]>('/api/classes'),
+      ]);
+      setStudents(studentsData);
+      setVolunteers(volunteersData);
+      setClasses(classesData);
+    } catch (error) {
+      console.error('Error fetching reference data:', error);
+    }
+  };
 
   const fetchLog = async () => {
     try {
@@ -164,38 +184,68 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="studentId" className="text-[#333333]">
-            Student ID
+            Student
           </Label>
-          <Input
-            id="studentId"
+          <Select
             value={formData.studentId}
-            onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-            className="mt-1"
-          />
+            onValueChange={(value) => setFormData({ ...formData, studentId: value })}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select a student (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {students.map((student) => (
+                <SelectItem key={student.id} value={student.id}>
+                  {student.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label htmlFor="volunteerId" className="text-[#333333]">
-            Volunteer ID
+            Volunteer
           </Label>
-          <Input
-            id="volunteerId"
+          <Select
             value={formData.volunteerId}
-            onChange={(e) => setFormData({ ...formData, volunteerId: e.target.value })}
-            className="mt-1"
-          />
+            onValueChange={(value) => setFormData({ ...formData, volunteerId: value })}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select a volunteer (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {volunteers.map((volunteer) => (
+                <SelectItem key={volunteer.id} value={volunteer.id}>
+                  {volunteer.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div>
         <Label htmlFor="classId" className="text-[#333333]">
-          Class ID
+          Class
         </Label>
-        <Input
-          id="classId"
+        <Select
           value={formData.classId}
-          onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-          className="mt-1"
-        />
+          onValueChange={(value) => setFormData({ ...formData, classId: value })}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Select a class (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">None</SelectItem>
+            {classes.map((cls) => (
+              <SelectItem key={cls.id} value={cls.id}>
+                {cls.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
