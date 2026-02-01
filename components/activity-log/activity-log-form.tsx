@@ -187,14 +187,14 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
             Student
           </Label>
           <Select
-            value={formData.studentId}
-            onValueChange={(value) => setFormData({ ...formData, studentId: value })}
+            value={formData.studentId || 'none'}
+            onValueChange={(value) => setFormData({ ...formData, studentId: value === 'none' ? '' : value })}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select a student (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {students.map((student) => (
                 <SelectItem key={student.id} value={student.id}>
                   {student.name}
@@ -208,14 +208,14 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
             Volunteer
           </Label>
           <Select
-            value={formData.volunteerId}
-            onValueChange={(value) => setFormData({ ...formData, volunteerId: value })}
+            value={formData.volunteerId || 'none'}
+            onValueChange={(value) => setFormData({ ...formData, volunteerId: value === 'none' ? '' : value })}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder="Select a volunteer (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {volunteers.map((volunteer) => (
                 <SelectItem key={volunteer.id} value={volunteer.id}>
                   {volunteer.name}
@@ -231,14 +231,14 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
           Class
         </Label>
         <Select
-          value={formData.classId}
-          onValueChange={(value) => setFormData({ ...formData, classId: value })}
+          value={formData.classId || 'none'}
+          onValueChange={(value) => setFormData({ ...formData, classId: value === 'none' ? '' : value })}
         >
           <SelectTrigger className="mt-1">
             <SelectValue placeholder="Select a class (optional)" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None</SelectItem>
+            <SelectItem value="none">None</SelectItem>
             {classes.map((cls) => (
               <SelectItem key={cls.id} value={cls.id}>
                 {cls.title}
