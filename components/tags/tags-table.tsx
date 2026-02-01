@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader2, RefreshCw } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 import Link from 'next/link';
 
@@ -34,6 +34,8 @@ export function TagsTable() {
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [cleanupDialogOpen, setCleanupDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchTags();
@@ -101,6 +103,29 @@ export function TagsTable() {
     }
   };
 
+  const handleCleanup = async () => {
+    setIsCleaningUp(true);
+    try {
+      const result = await apiPost<{ success: boolean; deletedOrphanedItems: number }>('/api/tags/cleanup', {});
+      setCleanupDialogOpen(false);
+      
+      // Show result message
+      if (result.deletedOrphanedItems > 0) {
+        alert(`Cleanup complete! Removed ${result.deletedOrphanedItems} orphaned tag association(s).`);
+      } else {
+        alert('Cleanup complete! No orphaned tag associations found.');
+      }
+      
+      // Refresh tags to get updated counts
+      await fetchTags();
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      alert('Failed to cleanup tags. Please try again.');
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
   const openEditDialog = (tag: Tag) => {
     setSelectedTag(tag);
     setNewTagName(tag.name);
@@ -121,7 +146,7 @@ export function TagsTable() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <div className="flex gap-4 items-center">
         <Input
           placeholder="Search tags..."
@@ -319,6 +344,54 @@ export function TagsTable() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Cleanup Button - Bottom Left */}
+      <div className="fixed bottom-4 left-4">
+        <Dialog open={cleanupDialogOpen} onOpenChange={setCleanupDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-300 text-gray-600 hover:bg-gray-50 shadow-md"
+              title="Clean up tag counts"
+            >
+              <RefreshCw className="w-3 h-3" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-[#8B4513]">Clean Up Tag Counts</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-[#333333]">
+                This will recalculate all tag usage counts by removing orphaned tag associations 
+                (references to deleted items).
+              </p>
+              <p className="text-sm text-amber-600">
+                ⚠️ This operation may take a moment to complete.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setCleanupDialogOpen(false)}
+                  className="border-[#333333] text-[#333333]"
+                  disabled={isCleaningUp}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCleanup}
+                  disabled={isCleaningUp}
+                  className="bg-[#8B4513] hover:bg-[#6B3410] text-white"
+                >
+                  {isCleaningUp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Clean Up
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
