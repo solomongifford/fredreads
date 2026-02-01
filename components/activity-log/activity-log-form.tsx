@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronRight } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { TagSelector } from '@/components/tags/tag-selector';
+import Link from 'next/link';
 
 interface ActivityLogFormProps {
   logId?: string;
@@ -135,7 +136,17 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center text-sm text-[#333333]">
+        <Link href="/activity-log" className="hover:text-[#8B4513] hover:underline">
+          Activity Log
+        </Link>
+        <ChevronRight className="w-4 h-4 mx-2" />
+        <span className="text-[#8B4513]">{logId ? 'Edit' : 'New'} Entry</span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Label htmlFor="date" className="text-[#333333]">
           Date *
@@ -257,6 +268,7 @@ export function ActivityLogForm({ logId }: ActivityLogFormProps) {
           {logId ? 'Update' : 'Create'} Activity Log
         </Button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 }

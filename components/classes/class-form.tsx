@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { ScheduleInput } from './schedule-input';
 import { TagSelector } from '@/components/tags/tag-selector';
@@ -211,7 +212,17 @@ export function ClassForm({ classId }: ClassFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center text-sm text-[#333333]">
+        <Link href="/classes" className="hover:text-[#8B4513] hover:underline">
+          Classes
+        </Link>
+        <ChevronRight className="w-4 h-4 mx-2" />
+        <span className="text-[#8B4513]">{classId ? 'Edit' : 'New'} Class</span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Label htmlFor="title" className="text-[#333333]">
           Title *
@@ -362,6 +373,7 @@ export function ClassForm({ classId }: ClassFormProps) {
           {classId ? 'Update' : 'Create'} Class
         </Button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 }

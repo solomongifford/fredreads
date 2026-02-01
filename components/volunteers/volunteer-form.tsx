@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronRight } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import { TagSelector } from '@/components/tags/tag-selector';
+import Link from 'next/link';
 
 interface VolunteerFormProps {
   volunteerId?: string;
@@ -233,7 +234,17 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center text-sm text-[#333333]">
+        <Link href="/volunteers" className="hover:text-[#8B4513] hover:underline">
+          Volunteers
+        </Link>
+        <ChevronRight className="w-4 h-4 mx-2" />
+        <span className="text-[#8B4513]">{volunteerId ? 'Edit' : 'New'} Volunteer</span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Label htmlFor="name" className="text-[#333333]">
           Name *
@@ -459,6 +470,7 @@ export function VolunteerForm({ volunteerId }: VolunteerFormProps) {
           {volunteerId ? 'Update' : 'Create'} Volunteer
         </Button>
       </div>
-    </form>
+      </form>
+    </div>
   );
 }
